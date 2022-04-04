@@ -6,7 +6,7 @@
 /*   By: vicmarti <vicmarti@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/22 21:52:08 by vicmarti          #+#    #+#             */
-/*   Updated: 2022/04/02 05:21:36 by vicmarti         ###   ########.fr       */
+/*   Updated: 2022/04/04 23:33:17 by vicmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,9 @@ void	test_ctors(const T& val)
 	ft::vector< T >		size_short(10, val);
 	ft::vector< T >		size_large(4442, val);
 	//TRY OTHER CTORS and check status TODO
-	std::vector< T >	ref(20, val);
-	ft::vector< T >		iterator_constructor(ref.begin(), ref.end());
+	ft::vector< T >		my_iterator_constructor(size_short.begin(), size_short.end());
+//	std::vector< T >	ref(20, val);
+//	ft::vector< T >		iterator_constructor(ref.begin(), ref.end());
 	try {
 		ft::vector< T >	extra(std::numeric_limits< typename ft::vector<T>::size_type >::max(), val);
 	} catch (std::length_error const&) {

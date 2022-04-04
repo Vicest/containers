@@ -6,7 +6,7 @@
 /*   By: vicmarti <vicmarti@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/20 19:48:17 by vicmarti          #+#    #+#             */
-/*   Updated: 2022/04/02 07:05:05 by vicmarti         ###   ########.fr       */
+/*   Updated: 2022/04/04 23:33:01 by vicmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,10 @@
 # include <cstddef> //size_t, ptrdiff_t
 # include <memory> //allocator
 # include <stdexcept> //out_of_range
+# include <typeinfo> //typeid
 # include "enable_if.hpp"
 # include "is_integral.hpp"
+# include "iterator_traits.hpp"
 //TODO remove v'v
 # include <algorithm> //fill
 # include <iterator> //distance TODO reimplement?
@@ -54,16 +56,22 @@ namespace ft
 
 			//TODO std::distance allowed?? reimplement?
 			//TODO This just won't work
-//			template < class InputIterator,
-//					class ft::enable_if<!ft::is_integral<InputIterator>::value, InputIterator>::type >
-//			vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
-//			: _alloc(alloc)
-//			{
-//				this->_capacity(std::distance(first, last));
-//				this->_size = this->_capacity;
-//				this->_data = this->_alloc.allocate(this->_capacity);
-//				this->construct_range_copy(first, last, this->_data);
-//			}
+			template < class InputIterator >
+//			template < class InputIterator, typename ft::iterator_traits<InputIterator>::value_type >
+//					class ft::enable_if<!ft::is_integral<InputIterator>::value, InputIterator> =0 >
+//			vector(typename ft::enable_if < ft::is_integral < InputIterator >::value, InputIterator >::value first,
+//			ft::enable_if < ft::iterator_traits<InputIterator>::value_type == value_type >
+			vector( typename ft::enable_if< !ft::is_integral<InputIterator>::value, InputIterator>::type first,
+					InputIterator last, const allocator_type& alloc = allocator_type())
+			: _alloc(alloc)
+			{
+//				typename ft::iterator_traits<InputIterator>::value_type	value_type;
+
+				this->_capacity = std::distance(first, last);
+				this->_size = this->_capacity;
+				this->_data = this->_alloc.allocate(this->_capacity);
+				this->construct_range_copy(first, last, this->_data);
+			}
 
 			vector(vector const &vector)
 			{
@@ -83,8 +91,7 @@ namespace ft
 				this->destroy_range(this->begin(), this->end());
 				this->_alloc.deallocate(this->_data, this->_capacity);
 				this->_data = this->_alloc.allocate(vector._capacity);
-				this->construct_range_copy(vector.begin(), vector.end(),
-						this->_data);
+				this->construct_range_copy(vector.begin(), vector.end(), this->_data);
 				this->_capacity = vector._capacity;
 				this->_size = vector._size;
 				this->_alloc = allocator_type(vector._alloc);
@@ -193,7 +200,7 @@ namespace ft
 
 				this->_alloc.destroy(position);
 				this->_size--;
-				while (postion != eit)
+				while (position != eit)
 					*position = *(++position);
 			}
 			iterator	erase(iterator first, iterator last) {
@@ -201,8 +208,8 @@ namespace ft
 
 				this->destroy_range(first, last);
 				this->_size -= (last - first);
-				while (last != end)
-					*first++ = *last++
+				while (last != eit)
+					*first++ = *last++;
 			}
 //			void	swap(vector& x);
 			void	clear(void) {
