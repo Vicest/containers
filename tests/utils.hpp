@@ -6,7 +6,7 @@
 /*   By: vicmarti <vicmarti@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/08 17:20:31 by vicmarti          #+#    #+#             */
-/*   Updated: 2022/04/09 00:29:30 by vicmarti         ###   ########.fr       */
+/*   Updated: 2022/04/11 22:02:34 by vicmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,11 @@ class A {
 		A(void) : _num(42) { std::cout << "CTOR" << std::endl; }
 		A(A const& a) : _num(a._num) { std::cout << "COPY" << std::endl; }
 		~A(void){ std::cout << "DTOR" << std::endl; }
-//		A	&operator=(A const& rhs) {
-//			std::cout << "ASGN" << std::endl;
-//			this->_num = rhs._num;
-//			return (*this);
-//		}
+		A	&operator=(A const& rhs) {
+			std::cout << "ASGN" << std::endl;
+			this->_num = rhs._num;
+			return (*this);
+		}
 
 		A	&operator++(void) {
 			this->_num += 1;
