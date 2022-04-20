@@ -6,7 +6,7 @@
 /*   By: vicmarti <vicmarti@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/20 19:48:17 by vicmarti          #+#    #+#             */
-/*   Updated: 2022/04/04 23:33:01 by vicmarti         ###   ########.fr       */
+/*   Updated: 2022/04/20 23:14:29 by vicmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,11 @@
 # include <cstddef> //size_t, ptrdiff_t
 # include <memory> //allocator
 # include <stdexcept> //out_of_range
-# include <typeinfo> //typeid
 # include "enable_if.hpp"
 # include "is_integral.hpp"
 # include "iterator_traits.hpp"
-//TODO remove v'v
-# include <algorithm> //fill
-# include <iterator> //distance TODO reimplement?
+# include "reverse_iterator.hpp"
+# include "distance.hpp"
 
 namespace ft
 {
@@ -37,8 +35,8 @@ namespace ft
 			typedef typename allocator_type::const_pointer		const_pointer;
 			typedef value_type*									iterator;
 			typedef const value_type*							const_iterator;
-			//typedef ...	reverse_iterator;
-			//typedef ...	const_reverse_iterator;
+			typedef ft::reverse_iterator<iterator>				reverse_iterator;
+			typedef ft::reverse_iterator<const_iterator>		const_reverse_iterator;
 			typedef std::ptrdiff_t								difference_type;
 			typedef std::size_t									size_type;
 
@@ -54,28 +52,24 @@ namespace ft
 				this->construct_range(this->begin(), this->end(), val);
 			}
 
-			//TODO std::distance allowed?? reimplement?
-			//TODO This just won't work
 			template < class InputIterator >
-//			template < class InputIterator, typename ft::iterator_traits<InputIterator>::value_type >
-//					class ft::enable_if<!ft::is_integral<InputIterator>::value, InputIterator> =0 >
-//			vector(typename ft::enable_if < ft::is_integral < InputIterator >::value, InputIterator >::value first,
-//			ft::enable_if < ft::iterator_traits<InputIterator>::value_type == value_type >
-			vector( typename ft::enable_if< !ft::is_integral<InputIterator>::value, InputIterator>::type first,
+			vector(typename ft::enable_if< !ft::is_integral<InputIterator>::value, InputIterator>::type first,
 					InputIterator last, const allocator_type& alloc = allocator_type())
 			: _alloc(alloc)
 			{
-//				typename ft::iterator_traits<InputIterator>::value_type	value_type;
-
-				this->_capacity = std::distance(first, last);
+				this->_capacity = ft::distance(first, last);
 				this->_size = this->_capacity;
 				this->_data = this->_alloc.allocate(this->_capacity);
 				this->construct_range_copy(first, last, this->_data);
 			}
 
-			vector(vector const &vector)
+			vector(vector const &v)
 			{
-				*this = vector; //Easy mode? Will see how STD behaves. TODO
+				this->_alloc = allocator_type(v._alloc);
+				this->_size = v._size;
+				this->_capacity = v._capacity;
+				this->_data = this->_alloc.allocate(this->_capacity);
+				this->construct_range_copy(v.begin(), v.end(), this->_data);
 			};
 
 			virtual ~vector(void)
@@ -84,17 +78,19 @@ namespace ft
 				this->_alloc.deallocate(this->_data, this->_capacity);
 			}
 
-			vector	&operator=(vector const &vector)
+			vector	&operator=(vector const &v)
 			{
-				if (this == &vector)
+				if (this == &v)
 					return (*this);
 				this->destroy_range(this->begin(), this->end());
 				this->_alloc.deallocate(this->_data, this->_capacity);
-				this->_data = this->_alloc.allocate(vector._capacity);
-				this->construct_range_copy(vector.begin(), vector.end(), this->_data);
-				this->_capacity = vector._capacity;
-				this->_size = vector._size;
-				this->_alloc = allocator_type(vector._alloc);
+				//TODO this is being done in the ctor, maybe make it generic and private?
+				this->_alloc = allocator_type(v._alloc);
+				this->_size = v._size;
+				this->_capacity = v._capacity;
+				this->_data = this->_alloc.allocate(this->_capacity);
+				this->construct_range_copy(v.begin(), v.end(), this->_data);
+				//----
 				return (*this);
 			};
 
@@ -103,9 +99,11 @@ namespace ft
 			iterator		end(void) { return this->_data + this->_size; }
 			const_iterator	begin(void) const { return this->_data; }
 			const_iterator	end(void) const { return this->_data + this->_size; }
-			//TODO
-			//rbegin;
-			//rend;
+
+			reverse_iterator		rbegin(void) { return reverse_iterator(this->end()); }
+			const_reverse_iterator	rbegin(void) const { return reverse_iterator(this->end()); }
+			reverse_iterator		rend(void) { return reverse_iterator(this->begin()); }
+			const_reverse_iterator	rend(void) const { return reverse_iterator(this->begin()); }
 
 			//CAPACITY
 			bool		empty(void) const { return (this->_size == 0); }
@@ -168,9 +166,22 @@ namespace ft
 			const_reference	back(void) const { return _data[_size - 1]; }
 
 			//MODIFIERS
-			//TODO fit to capacity if exceeds
-//			template < class InputIterator >
-//			void	assign(InputIterator first, InputIterator last);
+			//Fit to capacity if exceeds
+			template < class InputIterator >
+			void	assign(typename ft::enable_if< !ft::is_integral<InputIterator>::value, InputIterator>::type first,
+					InputIterator last) {
+				typename ft::iterator_traits<InputIterator>::difference_type elems = ft::distance(first, last);
+				destroy_range(this->begin(), this->end());
+				if (elems > this->_capacity)
+				{
+					this->_alloc.deallocate(this->_data, this->_capacity);
+					this->_data = this->_alloc.allocate(elems);
+					this->_capacity = elems;
+				}
+				construct_range_copy(first, last, this->_data);
+				this->_size = elems;
+			}
+
 			void	assign(size_type n, const value_type& val) {
 				this->destroy_range(this->begin(), this->end());
 				if (this->_capacity < n)
@@ -182,36 +193,74 @@ namespace ft
 				this->_size = n;
 				this->construct_range(this->begin(), this->end(), val);
 			}
-			//TODO double capacity if full
-//			void	push_back(const value_type& val);
+
+			//Double capacity if full
+			void	push_back(const value_type& val) {
+				value_type*	new_data;
+				size_type	new_capacity;
+
+				if (this->_size == this->_capacity)
+				{
+					new_capacity = this->enlarge_size(this->_capacity + 1, true);
+					new_data = this->_alloc.allocate(new_capacity);
+					this->construct_range_copy(this->begin(), this->end(), new_data);
+					this->destroy_range(this->begin(), this->end());
+					this->_alloc.deallocate(this->_data, this->_capacity);
+					this->_data = new_data;
+					this->_capacity = new_capacity;
+				}
+				this->_alloc.construct(this->_data + this->_size, val);
+				this->_size++;
+			}
+
+			//I refuse to let _size undeflow
 			void	pop_back(void) {
-				if (this->_size)
+				if (this->_size == 0)
 					return ;
 				this->_size--;
 				this->_alloc.destroy(this->end());
 			}
-			//TODO double capacity when full
-//			iterator	insert(iterator position, const value_type& val);
-//			void	insert(iterator position, size_type n, const value_type& val);
-//			template < class InputIterator >
-//			void	insert(iterator position, InputIterator first, InputIterator last);
-			iterator	erase(iterator position) {
-				iterator	eit = this->end();
+			//Double capacity when full
+			iterator	insert(iterator position, const value_type& val) {
+				size_type	pos_index = position - this->begin();
 
-				this->_alloc.destroy(position);
-				this->_size--;
-				while (position != eit)
-					*position = *(++position);
+				insert_generic(position, &val, &val, 1, false);
+				return (this->begin() + pos_index);
 			}
+
+			void	insert(iterator position, size_type n, const value_type& val) {
+				insert_generic(position, &val, &val, n, false);
+			}
+
+			template < class InputIterator >
+			void	insert(iterator position, InputIterator first,
+						typename ft::enable_if<!ft::is_integral<InputIterator>::value, InputIterator>::type last) {
+				insert_generic(position, first, last, ft::distance(first, last), true);
+			}
+
 			iterator	erase(iterator first, iterator last) {
 				iterator	eit = this->end();
 
 				this->destroy_range(first, last);
-				this->_size -= (last - first);
+				this->_size -= last - first;
 				while (last != eit)
 					*first++ = *last++;
+				return (first);
 			}
-//			void	swap(vector& x);
+
+			iterator	erase(iterator position) {
+				return	(this->erase(position, position + 1));
+			}
+
+			void	swap(vector& x) {
+				vector	aux(x);
+
+				if (this == &x)
+					return ;
+				x = *this;
+				*this = aux;
+			}
+
 			void	clear(void) {
 				this->destroy_range(this->begin(), this->end());
 				this->_size = 0;
@@ -225,20 +274,84 @@ namespace ft
 			allocator_type			_alloc;
 			size_type				_capacity;
 			size_type				_size;
-			value_type*				_data;//TODO needs const-ness??
+			value_type*				_data;
 
-			//TODO make them static??
-			void	destroy_range(iterator first, iterator last) {
+			template < class InputIterator >
+			void	destroy_range(typename ft::enable_if< !ft::is_integral<InputIterator>::value, InputIterator >::type first,
+					InputIterator last) {
 				for(; first != last; first++)
 					this->_alloc.destroy(first);
 			}
-			void	construct_range(iterator first, iterator last, const_reference val) {
+
+			//TODO generalize to have only one construct
+			template < class InputIterator >
+			void	construct_range(typename ft::enable_if< !ft::is_integral<InputIterator>::value, InputIterator >::type first,
+					InputIterator last, const_reference val) {
 				for(; first != last; first++)
-					this->_alloc.construct(first, val);
+						this->_alloc.construct(&*first, val);
 			}
-			void	construct_range_copy(const_iterator first, const_iterator last, iterator copy_first) {
+
+			template < class InputIterator >
+			void	construct_range_copy(typename ft::enable_if< !ft::is_integral<InputIterator>::value, InputIterator >::type first,
+					InputIterator last, iterator copy_first) {
 				for(; first != last; first++, copy_first++)
 					this->_alloc.construct(copy_first, *first);
+			}
+
+			template<class InputIterator>
+			void	insert_generic(iterator pos, InputIterator first, InputIterator last, size_type n, bool is_range) {
+				size_type	insert_size = n;
+				
+				if (this->_capacity < this->_size + insert_size)
+					resize_insert(pos, first, last, insert_size, is_range);
+				else
+					inplace_insert(pos, first, last, insert_size, is_range);
+			}
+
+			template<class InputIterator>
+			void	resize_insert(iterator pos, InputIterator first, InputIterator last, size_type insert_size, bool is_range) {
+				size_type	new_capacity = enlarge_size(this->_size + insert_size, true);
+				size_type	pos_index = pos - this->begin();
+				value_type*	new_data;
+
+				new_data = this->_alloc.allocate(new_capacity);
+				construct_range_copy(this->begin(), pos, new_data);
+				if (is_range)
+					construct_range_copy(first, last, new_data + pos_index);
+				else
+					construct_range(new_data + pos_index, new_data + pos_index + insert_size, *first);
+				construct_range_copy(pos, this->end(), new_data + pos_index + insert_size);
+				destroy_range(this->begin(), this->end());
+				this->_alloc.deallocate(this->_data, this->_capacity);
+				this->_data = new_data;
+				this->_capacity = new_capacity;
+				this->_size += insert_size;
+			}
+
+			template<class InputIterator>
+			void	inplace_insert(iterator pos, InputIterator first, InputIterator last, size_type insert_size, bool is_range) {
+				for (reverse_iterator rit(this->rbegin()), reit(pos);
+						rit != reit;
+						rit++)
+					rit[-insert_size] = rit[0];
+				if (is_range)
+					construct_range_copy(first, last, pos);
+				else
+					construct_range(pos, pos + insert_size, *first);
+				this->_size += insert_size;
+			}
+
+			size_type	enlarge_size(size_type min, bool duplicate) {
+				size_type	buff_size = min;
+
+				if (duplicate) {
+					buff_size = this->_capacity;
+					if (buff_size == 0)
+						buff_size = 1;
+					while (min > buff_size)
+						buff_size <<= 1;
+				}
+				return (buff_size);
 			}
 	};
 }
