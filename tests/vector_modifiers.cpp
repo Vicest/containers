@@ -6,7 +6,7 @@
 /*   By: vicmarti <vicmarti@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/10 16:17:13 by vicmarti          #+#    #+#             */
-/*   Updated: 2022/04/11 20:33:23 by vicmarti         ###   ########.fr       */
+/*   Updated: 2022/04/22 21:16:48 by vicmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@ namespace test = ft;
 #endif
 
 template < class T >
-void	push_pop(T const& t) {
+void	push_pop(T const& type) {
+	T				t(type);
 	test::vector<T>	v;
 	test::vector<T>	w(5, t);
 
@@ -82,6 +83,11 @@ void	deletion(T const& t) {
 	test::vector<T>	v;
 	test::vector<T>	w(5, t);
 	test::vector<T>	x(10, t);
+	test::vector<T>	xcopy(x);
+
+	std::cout << xcopy << std::endl;
+	xcopy.clear();
+	std::cout << xcopy << std::endl;
 
 	for (int i = 1; i < x.size(); i++) {
 			x[i] = x[i - 1] + x[i];
@@ -92,8 +98,6 @@ void	deletion(T const& t) {
 	x.erase(x.begin() + 2, x.begin() + 6);
 	std::cout << x << std::endl;
 	x.erase(x.begin(), x.end());
-	std::cout << x << std::endl;
-	x.clear();
 	std::cout << x << std::endl;
 	std::cout << w << std::endl;
 	w.clear();
@@ -125,14 +129,29 @@ void	insertion(T const& t) {
 			y[i] = y[i - 1] + y[i];
 	}
 	std::cout << v << std::endl << w << std::endl << x << std::endl;
-	v.insert(v.beign(), tcopy());
-	w.insert(w.beign(), tcopy());
+	++tcopy;
+	std::cout << *(v.insert(v.begin(), tcopy)) << std::endl;
+	std::cout << *(w.insert(w.begin(), tcopy)) << std::endl;
 	std::cout << v << std::endl << w << std::endl;
-	v.insert(v.beign(), x.begin());
-	w.insert(w.beign(), x.begin());
+	++tcopy;
+	std::cout << *(v.insert(v.end(), tcopy)) << std::endl;
+	std::cout << *(w.insert(w.end(), tcopy)) << std::endl;
 	std::cout << v << std::endl << w << std::endl;
-	v.insert(v.beign(), x.begin());
-	w.insert(w.end(), x.begin()++);
+	++tcopy;
+	v.insert(v.begin(), 1, tcopy);
+	w.insert(w.begin(), 1, tcopy);
+	std::cout << v << std::endl << w << std::endl;
+	++tcopy;
+	v.insert(v.begin(), 12, tcopy);
+	w.insert(w.begin(), 12, tcopy);
+	std::cout << v << std::endl << w << std::endl;
+	++tcopy;
+	v.insert(v.begin(), 0, tcopy);
+	w.insert(w.begin(), 0, tcopy);
+	std::cout << v << std::endl << w << std::endl;
+	std::cout << "JAJAJAlol" << std::endl;
+	v.insert(v.begin(), x.begin(), x.end());
+	w.insert(w.begin(), x.begin(), x.end());
 	std::cout << v << std::endl << w << std::endl;
 	w.insert(w.end(), w.begin(), w.end());
 	v.insert(v.begin(), y.begin(), y.begin());
@@ -148,14 +167,19 @@ void	insertion(T const& t) {
 }
 
 int	main(void) {
+	std::cout << "PUSH_POP" << std::endl;
 	push_pop<int>(123);
 	push_pop<A>(A());
+	std::cout << "ASSIGN" << std::endl;
 	assign<int>(321);
 	assign<A>(A());
+	std::cout << "SWAP" << std::endl;
 	swap<int>(12);
 	swap<A>(A());
+	std::cout << "DELETION" << std::endl;
 	deletion<int>(444);
 	deletion<A>(A());
+	std::cout << "INSERTION" << std::endl;
 	insertion<int>(111);
 	insertion<A>(A());
 #ifndef STD

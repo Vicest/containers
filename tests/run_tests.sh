@@ -53,6 +53,7 @@ do
 	TEST_NAME=${FILE%.cpp}
 	LOG_THIS=$LOG_DIR'/'$TEST_NAME
 
+	echo $FILE
 	if [ ! -d $LOG_THIS ]
 	then
 		mkdir $LOG_THIS

@@ -6,7 +6,7 @@
 /*   By: vicmarti <vicmarti@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/08 20:36:07 by vicmarti          #+#    #+#             */
-/*   Updated: 2022/04/10 16:13:44 by vicmarti         ###   ########.fr       */
+/*   Updated: 2022/04/18 18:39:18 by vicmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,9 @@ namespace test = ft;
 
 template < class T >
 void	access(size_t size, T const& t) {
+	std::cout << "hola";
 	typename test::vector<T>::size_type	i;
+	std::cout << "hola";
 
 	const test::vector<T>	const_vec(size, t);
 	test::vector<T>			vec = const_vec;
@@ -51,8 +53,11 @@ void	access(size_t size, T const& t) {
 }
 
 int	main(void) {
+	std::cout << "hola";
 	A	a;
+	std::cout << "hola";
 	A	b = a;
+	std::cout << "hola";
 	access<int>(5, 123);
 	access<float>(0, 23.1);
 	access<A>(4, A());
