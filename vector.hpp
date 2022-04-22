@@ -6,7 +6,7 @@
 /*   By: vicmarti <vicmarti@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/20 19:48:17 by vicmarti          #+#    #+#             */
-/*   Updated: 2022/04/20 23:14:29 by vicmarti         ###   ########.fr       */
+/*   Updated: 2022/04/22 21:00:21 by vicmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -196,21 +196,7 @@ namespace ft
 
 			//Double capacity if full
 			void	push_back(const value_type& val) {
-				value_type*	new_data;
-				size_type	new_capacity;
-
-				if (this->_size == this->_capacity)
-				{
-					new_capacity = this->enlarge_size(this->_capacity + 1, true);
-					new_data = this->_alloc.allocate(new_capacity);
-					this->construct_range_copy(this->begin(), this->end(), new_data);
-					this->destroy_range(this->begin(), this->end());
-					this->_alloc.deallocate(this->_data, this->_capacity);
-					this->_data = new_data;
-					this->_capacity = new_capacity;
-				}
-				this->_alloc.construct(this->_data + this->_size, val);
-				this->_size++;
+				this->insert_generic(this->end(), &val, &val, 1, false);
 			}
 
 			//I refuse to let _size undeflow
@@ -253,12 +239,19 @@ namespace ft
 			}
 
 			void	swap(vector& x) {
-				vector	aux(x);
+				allocator_type	aux_alloc = x._alloc;
+				value_type*		aux_data = x._data;
+				size_type		aux_size = x._size;
+				size_type		aux_capacity = x._capacity;
 
-				if (this == &x)
-					return ;
-				x = *this;
-				*this = aux;
+				x._alloc = this->_alloc;
+				x._data = this->_data;
+				x._size = this->_size;
+				x._capacity = this->_capacity;
+				this->_alloc = aux_alloc;
+				this->_data = aux_data;
+				this->_size = aux_size;
+				this->_capacity = aux_capacity;
 			}
 
 			void	clear(void) {
@@ -301,7 +294,9 @@ namespace ft
 			template<class InputIterator>
 			void	insert_generic(iterator pos, InputIterator first, InputIterator last, size_type n, bool is_range) {
 				size_type	insert_size = n;
-				
+
+				if (n == 0)
+					return ;
 				if (this->_capacity < this->_size + insert_size)
 					resize_insert(pos, first, last, insert_size, is_range);
 				else
